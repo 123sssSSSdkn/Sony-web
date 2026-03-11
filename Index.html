@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@allinone_reborn - Sony LIV Channels</title>
+    <title>@allinone_reborn - All Sony LIV Channels</title>
     <style>
         * {
             margin: 0;
@@ -27,6 +27,18 @@
         .header {
             text-align: center;
             padding: 40px 20px;
+            animation: fadeInDown 0.8s ease;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         h1 {
@@ -35,6 +47,57 @@
             background: linear-gradient(45deg, #fff, #ffd700, #ff69b4, #00ffff);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            background-size: 300% 300%;
+            animation: gradient 6s ease infinite;
+        }
+
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+
+        .channel-count {
+            background: rgba(255, 215, 0, 0.2);
+            padding: 8px 20px;
+            border-radius: 50px;
+            display: inline-block;
+            margin-bottom: 20px;
+            border: 1px solid #ffd700;
+        }
+
+        .search-box {
+            max-width: 400px;
+            margin: 20px auto;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 15px 25px;
+            border: none;
+            border-radius: 50px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            color: white;
+            font-size: 16px;
+            border: 2px solid rgba(255, 215, 0, 0.3);
+            transition: all 0.3s;
+        }
+
+        .search-box input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #ffd700;
+            background: rgba(255, 255, 255, 0.25);
         }
 
         .channel-grid {
@@ -50,16 +113,23 @@
             border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 15px;
             overflow: hidden;
-            transition: all 0.3s;
+            transition: all 0.3s ease;
             cursor: pointer;
             text-decoration: none;
             color: white;
+            animation: cardFade 0.5s ease forwards;
+            opacity: 0;
+        }
+
+        @keyframes cardFade {
+            to { opacity: 1; }
         }
 
         .channel-card:hover {
-            transform: translateY(-5px);
+            transform: translateY(-5px) scale(1.02);
             background: rgba(255, 255, 255, 0.2);
             border-color: #ffd700;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
         }
 
         .channel-logo {
@@ -75,14 +145,25 @@
             max-width: 100%;
             max-height: 100%;
             object-fit: contain;
+            filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3));
         }
 
         .channel-title {
             padding: 15px;
             text-align: center;
             font-weight: 600;
+            font-size: 14px;
             background: rgba(0, 0, 0, 0.4);
             color: #ffd700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .channel-genre {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-top: 5px;
+            text-transform: capitalize;
         }
 
         .footer {
@@ -92,10 +173,46 @@
             border-top: 1px solid rgba(255, 255, 255, 0.2);
         }
 
+        .no-results {
+            grid-column: 1/-1;
+            text-align: center;
+            padding: 50px;
+            font-size: 1.2em;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 50px;
+            display: none;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #ffd700;
+            animation: spin 1s ease-in-out infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
         @media (max-width: 768px) {
             h1 { font-size: 1.8em; }
-            .channel-grid { grid-template-columns: repeat(2, 1fr); }
+            .channel-grid { grid-template-columns: repeat(2, 1fr); gap: 15px; }
             .channel-logo { height: 100px; }
+            .channel-title { font-size: 12px; padding: 12px; }
+        }
+
+        @media (max-width: 480px) {
+            .container { padding: 10px; }
+            .channel-logo { height: 80px; }
+            .channel-title { font-size: 11px; padding: 10px; }
         }
     </style>
 </head>
@@ -103,39 +220,148 @@
     <div class="container">
         <header class="header">
             <h1>📺 @allinone_reborn</h1>
-            <p>Sony LIV Channels</p>
+            <div class="subtitle">All Sony LIV Channels • Live Streaming</div>
+            <div class="channel-count" id="channelCount">Loading channels...</div>
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="🔍 Search channels by name, genre, or language..." onkeyup="filterChannels()">
+            </div>
         </header>
 
-        <div class="channel-grid" id="channelGrid">
-            <!-- Channels will be loaded here -->
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Loading channels...</p>
         </div>
 
+        <div class="channel-grid" id="channelGrid"></div>
+
         <footer class="footer">
-            <p>© 2024 @allinone_reborn</p>
+            <p>© 2024 @allinone_reborn - All rights reserved</p>
+            <p>📺 Total Channels: <span id="totalChannels">0</span></p>
         </footer>
     </div>
 
     <script>
+        // Complete channel list with all Sony channels
         const channels = [
-            { id: 'sony-hd', title: 'SONY HD', logo: 'https://jiotvimages.cdn.jio.com/dare_images/images/Sony_HD.png' },
-            { id: 'sab-hd', title: 'SAB HD', logo: 'https://jiotvimages.cdn.jio.com/dare_images/images/Sony_SAB_HD.png' },
-            { id: 'sony-max-hd', title: 'SONY MAX HD', logo: 'https://jiotvimages.cdn.jio.com/dare_images/images/Sony_Max_HD.png' },
-            { id: 'sony-pix-hd', title: 'SONY PIX HD', logo: 'https://jiotvimages.cdn.jio.com/dare_images/images/Sony_Pix_HD.png' }
+            // Entertainment Channels
+            { id: 'sony-hd', title: 'SONY HD', logo: 'https://jiotvimages.cdn.jio.com/dare_images/images/Sony_HD.png', genre: 'Entertainment', language: 'Hindi', url: 'https://allinonereborn.store/sony-new/playlists/sony_hd.m3u8' },
+            { id: 'sab-hd', title: 'SAB HD', logo: 'https://jiotvimages.cdn.jio.com/dare_images/images/Sony_SAB_HD.png', genre: 'Comedy', language: 'Hindi', url: 'https://allinonereborn.store/sony-new/playlists/sab_hd.m3u8' },
+            
+            // Regional Channels
+            { id: 'sony-marathi', title: 'SONY MARATHI', logo: 'https://jiotvimages.cdn.jio.com/dare_images/images/Sony_Marathi_SD.png', genre: 'Regional', language: 'Marathi', url: 'https://allinonereborn.store/sony-new/playlists/sony_marathi.m3u8' },
+            { id: 'sony-pal', title: 'SONY PAL', logo: 'https://jiotvimages.cdn.jio.com/dare_images/images/Sony_Pal.png', genre: 'Regional', language: 'Punjabi', url: 'https://allinonereborn.store/sony-new/playlists/sony_pal.m3u8' },
+            { id: 'sony-aath', title: 'SONY AATH', logo: 'https://jiotvimages.cdn.jio.com/dare_images/images/Sony_aath.png', genre: 'Regional', language: 'Bengali', url: 'https://allinonereborn.store/sony-new/playlists/sony_aath.m3u8' },
+            
+            // Kids Channel
+            { id: 'sony-yay', title: 'SONY YAY', logo: 'https://jiotvimages.cdn.jio.com/dare_images/images/Sony_Yay_Hindi.png', genre: 'Kids', language: 'Hindi', url: 'https://allinonereborn.store/sony-new/playlists/sony_yay.m3u8' },
+            
+            // Movie Channels
+            { id: 'sony-max-hd', title: 'SONY MAX HD', logo: 'https://jiotvimages.cdn.jio.com/dare_images/images/Sony_Max_HD.png', genre: 'Movies', language: 'Hindi', url: 'https://allinonereborn.store/sony-new/playlists/sony_max_hd.m3u8' },
+            { id: 'sony-max', title: 'SONY MAX', logo: 'https://jiotvimages.cdn.jio.com/dare_images/images/Sony_Max_SD.png', genre: 'Movies', language: 'Hindi', url: 'https://allinonereborn.store/sony-new/playlists/sony_max.m3u8' },
+            { id: 'sony-max2', title: 'SONY MAX2', logo: 'https://jiotvimages.cdn.jio.com/dare_images/images/Sony_MAX2.png', genre: 'Movies', language: 'Hindi', url: 'https://allinonereborn.store/sony-new/playlists/sony_max2.m3u8' },
+            { id: 'sony-wah', title: 'SONY WAH', logo: 'https://jiotvimages.cdn.jio.com/dare_images/images/Sony_Wah.png', genre: 'Music', language: 'Hindi', url: 'https://allinonereborn.store/sony-new/playlists/sony_wah.m3u8' },
+            { id: 'sony-pix-hd', title: 'SONY PIX HD', logo: 'https://jiotvimages.cdn.jio.com/dare_images/images/Sony_Pix_HD.png', genre: 'Movies', language: 'English', url: 'https://allinonereborn.store/sony-new/playlists/sony_pix_hd.m3u8' },
+            
+            // Sports Channels - TEN Series
+            { id: 'sony-ten-1-hd', title: 'SONY TEN 1 HD', logo: 'https://jiotvimages.cdn.jio.com/dare_images/images/Ten_HD.png', genre: 'Sports', language: 'Multiple', url: 'https://allinonereborn.store/sony-new/playlists/sony_ten_1_hd.m3u8' },
+            { id: 'sony-ten-1', title: 'SONY TEN 1', logo: 'https://jiotvimages.cdn.jio.com/dare_images/images/Ten_1.png', genre: 'Sports', language: 'Multiple', url: 'https://allinonereborn.store/sony-new/playlists/sony_ten_1.m3u8' },
+            { id: 'sony-ten-2-hd', title: 'SONY TEN 2 HD', logo: 'https://jiotvimages.cdn.jio.com/dare_images/images/Ten2_HD.png', genre: 'Sports', language: 'Multiple', url: 'https://allinonereborn.store/sony-new/playlists/sony_ten_2_hd.m3u8' },
+            { id: 'sony-ten-2', title: 'SONY TEN 2', logo: 'https://jiotvimages.cdn.jio.com/dare_images/images/Ten2_HD.png', genre: 'Sports', language: 'Multiple', url: 'https://allinonereborn.store/sony-new/playlists/sony_ten_2.m3u8' },
+            { id: 'sony-ten-3-hd', title: 'SONY TEN 3 HD', logo: 'https://jiotvimages.cdn.jio.com/dare_images/images/Ten3_HD.png', genre: 'Sports', language: 'Multiple', url: 'https://allinonereborn.store/sony-new/playlists/sony_ten_3_hd.m3u8' },
+            { id: 'sony-ten-3', title: 'SONY TEN 3', logo: 'https://jiotvimages.cdn.jio.com/dare_images/images/Ten3_HD.png', genre: 'Sports', language: 'Multiple', url: 'https://allinonereborn.store/sony-new/playlists/sony_ten_3.m3u8' },
+            { id: 'sony-ten-4-hd', title: 'SONY TEN 4 HD', logo: 'https://jiotvimages.cdn.jio.com/dare_images/images/Ten_4_HD_Telugu.png', genre: 'Sports', language: 'Telugu', url: 'https://allinonereborn.store/sony-new/playlists/sony_ten_4_hd.m3u8' },
+            { id: 'sony-ten-4', title: 'SONY TEN 4', logo: 'https://jiotvimages.cdn.jio.com/dare_images/images/Ten_4_Telugu.png', genre: 'Sports', language: 'Telugu', url: 'https://allinonereborn.store/sony-new/playlists/sony_ten_4.m3u8' },
+            { id: 'sony-ten-5-hd', title: 'SONY TEN 5 HD', logo: 'https://jiotvimages.cdn.jio.com/dare_images/images/Six_HD.png', genre: 'Sports', language: 'Multiple', url: 'https://allinonereborn.store/sony-new/playlists/sony_ten_5_hd.m3u8' },
+            { id: 'sony-ten-5', title: 'SONY TEN 5', logo: 'https://jiotvimages.cdn.jio.com/dare_images/images/Six_HD.png', genre: 'Sports', language: 'Multiple', url: 'https://allinonereborn.store/sony-new/playlists/sony_ten_5.m3u8' },
+            
+            // Documentary Channel
+            { id: 'bbc-earth', title: 'BBC EARTH', logo: 'https://jiotvimages.cdn.jio.com/dare_images/images/Sony_BBC_Earth_HD.png', genre: 'Documentary', language: 'English', url: 'https://allinonereborn.store/sony-new/playlists/bbc_earth.m3u8' }
         ];
 
+        let currentChannels = [...channels];
         const grid = document.getElementById('channelGrid');
-        
-        channels.forEach(channel => {
-            const card = document.createElement('a');
-            card.className = 'channel-card';
-            card.href = '#';
-            card.innerHTML = `
-                <div class="channel-logo">
-                    <img src="${channel.logo}" alt="${channel.title}">
-                </div>
-                <div class="channel-title">${channel.title}</div>
-            `;
-            grid.appendChild(card);
+        const loading = document.getElementById('loading');
+        const channelCountSpan = document.getElementById('channelCount');
+        const totalChannelsSpan = document.getElementById('totalChannels');
+
+        // Update channel count
+        function updateChannelCount() {
+            channelCountSpan.textContent = `📡 ${currentChannels.length} Channels Available`;
+            totalChannelsSpan.textContent = channels.length;
+        }
+
+        // Display channels with staggered animation
+        function displayChannels(channelsToShow) {
+            grid.innerHTML = '';
+            
+            if (channelsToShow.length === 0) {
+                grid.innerHTML = '<div class="no-results">🔍 No channels found matching your search</div>';
+                return;
+            }
+
+            channelsToShow.forEach((channel, index) => {
+                const card = document.createElement('a');
+                card.className = 'channel-card';
+                card.href = `player.html?data=${encodeURIComponent(JSON.stringify(channel))}`;
+                card.style.animationDelay = `${index * 0.03}s`;
+                
+                card.innerHTML = `
+                    <div class="channel-logo">
+                        <img src="${channel.logo}" alt="${channel.title}" loading="lazy" onerror="this.src='https://via.placeholder.com/120x80?text=${channel.title.replace(' ', '+')}'">
+                    </div>
+                    <div class="channel-title">
+                        ${channel.title}
+                        <div class="channel-genre">${channel.genre} • ${channel.language}</div>
+                    </div>
+                `;
+                
+                grid.appendChild(card);
+            });
+
+            updateChannelCount();
+        }
+
+        // Filter channels based on search
+        function filterChannels() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+            
+            if (searchTerm === '') {
+                currentChannels = [...channels];
+            } else {
+                currentChannels = channels.filter(channel => 
+                    channel.title.toLowerCase().includes(searchTerm) ||
+                    channel.genre.toLowerCase().includes(searchTerm) ||
+                    channel.language.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            displayChannels(currentChannels);
+        }
+
+        // Load channels with loading animation
+        function loadChannels() {
+            loading.style.display = 'block';
+            grid.style.opacity = '0';
+            
+            setTimeout(() => {
+                loading.style.display = 'none';
+                displayChannels(channels);
+                grid.style.opacity = '1';
+            }, 500);
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadChannels();
+            updateChannelCount();
+        });
+
+        // Add keyboard support for search
+        document.getElementById('searchInput').addEventListener('keyup', (e) => {
+            if (e.key === 'Escape') {
+                e.target.value = '';
+                filterChannels();
+            }
         });
     </script>
 </body>
