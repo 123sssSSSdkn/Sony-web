@@ -1,4 +1,756 @@
-// Replace the proxyUrl line in setupStream() function:
-const proxyUrl = `/api/proxy?url=${encodeURIComponent(
-    channelData.m3u8 || `https://allinonereborn.store/sony-new/playlists/${channelData.id}.m3u8`
-)}`;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Stream Player - @allinone_reborn</title>
+    <!-- HLS.js for streaming -->
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            background: #000;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: white;
+        }
+
+        #player {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background: #000;
+        }
+
+        #videoPlayer {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            background: #000;
+        }
+
+        /* Channel Logo */
+        #channelLogo {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 50;
+            max-width: 150px;
+            max-height: 70px;
+            pointer-events: none;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+            transition: all 0.3s ease;
+        }
+
+        #channelLogo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        /* Back Button */
+        #backButton {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 60;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 30px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            text-decoration: none;
+        }
+
+        #backButton:hover {
+            background: #ffd700;
+            color: black;
+            border-color: #ffd700;
+        }
+
+        /* Video Controls */
+        #controls {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(transparent, rgba(0,0,0,0.9));
+            padding: 20px;
+            z-index: 40;
+            transition: opacity 0.3s;
+        }
+
+        #controls.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .control-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .control-left, .control-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .control-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 22px;
+            cursor: pointer;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .control-btn:hover {
+            background: rgba(255,215,0,0.3);
+            border-color: #ffd700;
+            transform: scale(1.1);
+        }
+
+        #volumeSlider {
+            width: 100px;
+            height: 5px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 5px;
+            outline: none;
+            cursor: pointer;
+            -webkit-appearance: none;
+        }
+
+        #volumeSlider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: #ffd700;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(255,215,0,0.5);
+        }
+
+        #timeDisplay {
+            color: white;
+            font-size: 14px;
+            min-width: 100px;
+            text-align: center;
+            background: rgba(0,0,0,0.5);
+            padding: 5px 10px;
+            border-radius: 20px;
+            backdrop-filter: blur(5px);
+        }
+
+        /* Loading Spinner */
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 30;
+            display: none;
+            text-align: center;
+        }
+
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(255,255,255,0.2);
+            border-radius: 50%;
+            border-top-color: #ffd700;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Unmute Overlay */
+        #unmuteOverlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 45;
+            cursor: pointer;
+            backdrop-filter: blur(5px);
+        }
+
+        #unmuteOverlay.hidden {
+            display: none;
+        }
+
+        #unmuteButton {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: rgba(0,0,0,0.8);
+            border: 3px solid #ffd700;
+            color: #ffd700;
+            font-size: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        #unmuteButton:hover {
+            background: #ffd700;
+            color: black;
+            transform: scale(1.2);
+        }
+
+        /* Error Message */
+        #errorMessage {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(220,53,69,0.95);
+            color: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            z-index: 100;
+            display: none;
+            backdrop-filter: blur(10px);
+            min-width: 320px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        #errorMessage h3 {
+            font-size: 24px;
+            margin-bottom: 15px;
+        }
+
+        #errorMessage p {
+            margin-bottom: 25px;
+            opacity: 0.9;
+        }
+
+        #errorMessage button {
+            margin: 5px;
+            padding: 12px 30px;
+            background: white;
+            color: #dc3545;
+            border: none;
+            border-radius: 30px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 16px;
+        }
+
+        #errorMessage button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        #errorMessage button:last-child {
+            background: transparent;
+            color: white;
+            border: 2px solid white;
+        }
+
+        /* Quality Selector */
+        #qualitySelector {
+            position: absolute;
+            bottom: 80px;
+            right: 20px;
+            background: rgba(0,0,0,0.9);
+            border-radius: 10px;
+            padding: 10px;
+            z-index: 50;
+            display: none;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        #qualitySelector.show {
+            display: block;
+        }
+
+        .quality-option {
+            padding: 10px 20px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        .quality-option:hover {
+            background: #ffd700;
+            color: black;
+        }
+
+        .quality-option.active {
+            background: #ffd700;
+            color: black;
+            font-weight: bold;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            #channelLogo { max-width: 100px; max-height: 50px; }
+            #backButton { padding: 8px 15px; font-size: 14px; }
+            .control-btn { width: 40px; height: 40px; font-size: 20px; }
+            #volumeSlider { width: 70px; }
+            #timeDisplay { font-size: 12px; min-width: 80px; }
+            #unmuteButton { width: 80px; height: 80px; font-size: 40px; }
+        }
+
+        @media (max-width: 480px) {
+            .control-bar { gap: 10px; }
+            #volumeSlider { width: 50px; }
+            #timeDisplay { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div id="player">
+        <video id="videoPlayer" playsinline webkit-playsinline muted></video>
+        
+        <!-- Channel Logo -->
+        <div id="channelLogo">
+            <img id="logoImg" src="" alt="Channel Logo">
+        </div>
+
+        <!-- Back Button -->
+        <a id="backButton" href="/">
+            <span>←</span> Back to Channels
+        </a>
+
+        <!-- Unmute Overlay -->
+        <div id="unmuteOverlay">
+            <div id="unmuteButton">🔇</div>
+        </div>
+
+        <!-- Loading Spinner -->
+        <div id="loading">
+            <div class="spinner"></div>
+            <p>Loading stream...</p>
+        </div>
+
+        <!-- Error Message -->
+        <div id="errorMessage">
+            <h3>⚠️ Playback Error</h3>
+            <p id="errorText"></p>
+            <button onclick="retryStream()">Retry</button>
+            <button onclick="window.location.href='/'">Go Home</button>
+        </div>
+
+        <!-- Quality Selector -->
+        <div id="qualitySelector"></div>
+
+        <!-- Video Controls -->
+        <div id="controls">
+            <div class="control-bar">
+                <div class="control-left">
+                    <button class="control-btn" id="playPauseBtn">⏸️</button>
+                    <button class="control-btn" id="muteBtn">🔊</button>
+                    <input type="range" id="volumeSlider" min="0" max="1" step="0.1" value="1">
+                    <span id="timeDisplay">00:00 / 00:00</span>
+                </div>
+                <div class="control-right">
+                    <button class="control-btn" id="fullscreenBtn">⛶</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Get channel data from URL - this comes from index.html
+        const urlParams = new URLSearchParams(window.location.search);
+        let channelData = null;
+        
+        try {
+            const dataParam = urlParams.get('data');
+            if (dataParam) {
+                channelData = JSON.parse(decodeURIComponent(dataParam));
+                console.log('Channel data loaded from index.html:', channelData);
+            } else {
+                // If no data parameter, try to get from referrer or show error
+                console.error('No channel data received from index.html');
+                showError('No channel selected. Please go back and select a channel.');
+            }
+        } catch (e) {
+            console.error('Error parsing channel data:', e);
+            showError('Invalid channel data');
+        }
+
+        // Player variables
+        const video = document.getElementById('videoPlayer');
+        const logoImg = document.getElementById('logoImg');
+        let hls = null;
+        let controlsTimeout = null;
+
+        // Set logo and title from channel data
+        if (channelData) {
+            if (channelData.logo) {
+                logoImg.src = channelData.logo;
+                console.log('Logo set to:', channelData.logo);
+            }
+            if (channelData.title) {
+                document.title = `${channelData.title} - @allinone_reborn`;
+                console.log('Title set to:', channelData.title);
+            }
+            if (channelData.url) {
+                console.log('Stream URL from index.html:', channelData.url);
+            }
+        }
+
+        // Initialize player
+        function initPlayer() {
+            if (!channelData) {
+                showError('No channel data available');
+                return;
+            }
+
+            if (!channelData.url) {
+                showError('No stream URL available for this channel');
+                return;
+            }
+
+            showLoading();
+            
+            const streamUrl = channelData.url;
+            console.log('Loading stream from index.html source:', streamUrl);
+
+            // Check if HLS is supported
+            if (Hls.isSupported()) {
+                hls = new Hls({
+                    maxBufferLength: 30,
+                    maxMaxBufferLength: 60,
+                    enableWorker: true,
+                    lowLatencyMode: true,
+                    backBufferLength: 60
+                });
+
+                hls.loadSource(streamUrl);
+                hls.attachMedia(video);
+
+                hls.on(Hls.Events.MANIFEST_PARSED, function(event, data) {
+                    console.log('Manifest parsed successfully from:', streamUrl);
+                    console.log('Available quality levels:', data.levels);
+                    hideLoading();
+                    
+                    // Auto play
+                    video.play().catch(function(error) {
+                        console.log('Autoplay failed - showing unmute button:', error);
+                        document.getElementById('unmuteOverlay').classList.remove('hidden');
+                    });
+
+                    // Setup quality selector if multiple levels
+                    if (data.levels && data.levels.length > 1) {
+                        setupQualitySelector(data.levels);
+                    }
+                });
+
+                hls.on(Hls.Events.ERROR, function(event, data) {
+                    console.error('HLS Error:', data);
+                    
+                    if (data.fatal) {
+                        switch (data.type) {
+                            case Hls.ErrorTypes.NETWORK_ERROR:
+                                showError('Network error. Retrying...');
+                                setTimeout(function() {
+                                    hls.startLoad();
+                                }, 2000);
+                                break;
+                            case Hls.ErrorTypes.MEDIA_ERROR:
+                                showError('Media error. Recovering...');
+                                hls.recoverMediaError();
+                                break;
+                            default:
+                                showError('Playback error: ' + data.details);
+                                break;
+                        }
+                    }
+                });
+
+            } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                // Native HLS support (Safari)
+                console.log('Using native HLS support for Safari');
+                video.src = streamUrl;
+                video.addEventListener('loadedmetadata', function() {
+                    console.log('Metadata loaded, stream ready');
+                    hideLoading();
+                    video.play().catch(function(error) {
+                        console.log('Autoplay failed:', error);
+                        document.getElementById('unmuteOverlay').classList.remove('hidden');
+                    });
+                });
+            } else {
+                showError('HLS is not supported in this browser');
+            }
+
+            setupControls();
+        }
+
+        function setupControls() {
+            const controls = document.getElementById('controls');
+            const playPauseBtn = document.getElementById('playPauseBtn');
+            const muteBtn = document.getElementById('muteBtn');
+            const volumeSlider = document.getElementById('volumeSlider');
+            const fullscreenBtn = document.getElementById('fullscreenBtn');
+            const unmuteOverlay = document.getElementById('unmuteOverlay');
+            const timeDisplay = document.getElementById('timeDisplay');
+
+            // Auto-hide controls on mouse inactivity
+            function showControls() {
+                controls.classList.remove('hidden');
+                resetControlsTimer();
+            }
+
+            function resetControlsTimer() {
+                if (controlsTimeout) {
+                    clearTimeout(controlsTimeout);
+                }
+                controlsTimeout = setTimeout(function() {
+                    if (!video.paused) {
+                        controls.classList.add('hidden');
+                    }
+                }, 3000);
+            }
+
+            // Show controls on mouse movement
+            document.addEventListener('mousemove', showControls);
+            document.addEventListener('touchstart', showControls);
+
+            // Play/Pause
+            playPauseBtn.addEventListener('click', function() {
+                if (video.paused) {
+                    video.play();
+                } else {
+                    video.pause();
+                }
+            });
+
+            video.addEventListener('play', function() {
+                playPauseBtn.textContent = '⏸️';
+                unmuteOverlay.classList.add('hidden');
+            });
+
+            video.addEventListener('pause', function() {
+                playPauseBtn.textContent = '▶️';
+            });
+
+            // Volume
+            muteBtn.addEventListener('click', function() {
+                video.muted = !video.muted;
+                updateMuteButton();
+            });
+
+            volumeSlider.addEventListener('input', function(e) {
+                video.volume = parseFloat(e.target.value);
+                video.muted = false;
+                updateMuteButton();
+            });
+
+            function updateMuteButton() {
+                if (video.muted || video.volume === 0) {
+                    muteBtn.textContent = '🔇';
+                } else if (video.volume < 0.5) {
+                    muteBtn.textContent = '🔉';
+                } else {
+                    muteBtn.textContent = '🔊';
+                }
+            }
+
+            video.addEventListener('volumechange', updateMuteButton);
+
+            // Time update
+            video.addEventListener('timeupdate', function() {
+                const current = formatTime(video.currentTime);
+                const duration = formatTime(video.duration);
+                timeDisplay.textContent = current + ' / ' + duration;
+            });
+
+            // Fullscreen
+            fullscreenBtn.addEventListener('click', function() {
+                if (!document.fullscreenElement) {
+                    document.getElementById('player').requestFullscreen();
+                } else {
+                    document.exitFullscreen();
+                }
+            });
+
+            // Unmute overlay
+            unmuteOverlay.addEventListener('click', function() {
+                video.muted = false;
+                video.play();
+                unmuteOverlay.classList.add('hidden');
+                updateMuteButton();
+            });
+
+            updateMuteButton();
+        }
+
+        function setupQualitySelector(levels) {
+            const selector = document.getElementById('qualitySelector');
+            
+            // Clear existing options
+            selector.innerHTML = '';
+            
+            // Auto quality option
+            const autoOption = document.createElement('div');
+            autoOption.className = 'quality-option active';
+            autoOption.textContent = 'AUTO';
+            autoOption.onclick = function() {
+                hls.currentLevel = -1;
+                document.querySelectorAll('.quality-option').forEach(opt => opt.classList.remove('active'));
+                autoOption.classList.add('active');
+            };
+            selector.appendChild(autoOption);
+
+            // Add quality options
+            levels.forEach(function(level, index) {
+                const option = document.createElement('div');
+                option.className = 'quality-option';
+                option.textContent = level.height ? level.height + 'p' : 'Quality ' + (index + 1);
+                option.onclick = function() {
+                    hls.currentLevel = index;
+                    document.querySelectorAll('.quality-option').forEach(opt => opt.classList.remove('active'));
+                    option.classList.add('active');
+                };
+                selector.appendChild(option);
+            });
+
+            // Toggle quality selector with Q key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'q' || e.key === 'Q') {
+                    selector.classList.toggle('show');
+                }
+            });
+        }
+
+        function formatTime(seconds) {
+            if (isNaN(seconds) || !isFinite(seconds)) return '00:00';
+            const hrs = Math.floor(seconds / 3600);
+            const mins = Math.floor((seconds % 3600) / 60);
+            const secs = Math.floor(seconds % 60);
+            
+            if (hrs > 0) {
+                return hrs + ':' + mins.toString().padStart(2, '0') + ':' + secs.toString().padStart(2, '0');
+            } else {
+                return mins.toString().padStart(2, '0') + ':' + secs.toString().padStart(2, '0');
+            }
+        }
+
+        function showLoading() {
+            document.getElementById('loading').style.display = 'block';
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        function showError(message) {
+            hideLoading();
+            console.error('Error:', message);
+            document.getElementById('errorText').textContent = message;
+            document.getElementById('errorMessage').style.display = 'block';
+        }
+
+        function retryStream() {
+            document.getElementById('errorMessage').style.display = 'none';
+            if (hls) {
+                hls.destroy();
+            }
+            initPlayer();
+        }
+
+        // Keyboard controls
+        document.addEventListener('keydown', function(e) {
+            // Don't trigger if typing in an input
+            if (e.target.tagName === 'INPUT') return;
+            
+            switch(e.key) {
+                case ' ':
+                case 'k':
+                    e.preventDefault();
+                    if (video.paused) video.play(); else video.pause();
+                    break;
+                case 'm':
+                    e.preventDefault();
+                    video.muted = !video.muted;
+                    break;
+                case 'f':
+                    e.preventDefault();
+                    if (!document.fullscreenElement) {
+                        document.getElementById('player').requestFullscreen();
+                    } else {
+                        document.exitFullscreen();
+                    }
+                    break;
+                case 'ArrowUp':
+                    e.preventDefault();
+                    video.volume = Math.min(1, video.volume + 0.1);
+                    break;
+                case 'ArrowDown':
+                    e.preventDefault();
+                    video.volume = Math.max(0, video.volume - 0.1);
+                    break;
+                case 'ArrowRight':
+                    e.preventDefault();
+                    video.currentTime = Math.min(video.duration, video.currentTime + 10);
+                    break;
+                case 'ArrowLeft':
+                    e.preventDefault();
+                    video.currentTime = Math.max(0, video.currentTime - 10);
+                    break;
+            }
+        });
+
+        // Start player only if we have channel data
+        if (channelData) {
+            initPlayer();
+        }
+
+        // Log that player is ready and waiting for index.html data
+        console.log('Player initialized, waiting for channel data from index.html');
+    </script>
+</body>
+</html>
