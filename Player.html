@@ -1,0 +1,1078 @@
+<!doctype html>
+<html lang="en">
+ <head>
+  <script>(function(s){s.dataset.zone='10689310',s.src='https://al5sm.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title id="title">SAB HD</title>
+  <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            font-family: Arial, sans-serif;
+        }
+
+        #player-container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            background: #000;
+            cursor: none; /* Hide cursor when controls are hidden */
+        }
+
+        #video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            background: #000;
+        }
+
+        /* Logo Styles - FIXED POSITION INSIDE PLAYER */
+        #channel-logo {
+            position: absolute;
+            top: 35px;
+            left: 20px;
+            z-index: 100;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.7));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #channel-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+
+        #channel-logo.hidden {
+            opacity: 0;
+            display: none;
+        }
+
+        /* Logo Position Controls */
+        #logo-controls {
+            position: absolute;
+            top: 35px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px;
+            border-radius: 8px;
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+            gap: 8px;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        #logo-controls.visible {
+            display: flex;
+        }
+
+        .logo-control-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+
+        .logo-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .logo-label {
+            color: white;
+            font-size: 12px;
+            min-width: 40px;
+        }
+
+        #logo-toggle-btn:hover {
+            background: rgba(0, 0, 0, 0.9);
+            transform: scale(1.1);
+        }
+
+        #controls {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(transparent, rgba(0,0,0,0.9));
+            padding: 15px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 100;
+            pointer-events: auto;
+        }
+
+        #controls.visible {
+            opacity: 1;
+        }
+
+        .control-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+        }
+
+        .control-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .control-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 16px;
+            transition: background 0.2s;
+        }
+
+        .btn:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        #volume-control {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        #volume-slider {
+            width: 60px;
+            height: 4px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 2px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 18px;
+            z-index: 150;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        #error-msg {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(220, 53, 69, 0.9);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            z-index: 200;
+            display: none;
+        }
+
+        /* Unmute overlay */
+        #unmute-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 50;
+            cursor: pointer;
+            transition: opacity 0.3s;
+        }
+
+        #unmute-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #unmute-button {
+            background: rgba(0,0,0,0.7);
+            color: white;
+            border: 2px solid white;
+            border-radius: 50%;
+            width: 80px;
+            height: 80px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 40px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        #unmute-button:hover {
+            transform: scale(1.1);
+        }
+
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+            #player-container {
+                height: 100vh;
+                width: 100vw;
+                position: fixed;
+                top: 0;
+                left: 0;
+            }
+            
+            #video {
+                width: 100%;
+                height: 100%;
+                object-fit: contain;
+            }
+            
+            #channel-logo {
+                top: 15px !important;
+                left: 10px !important;
+                width: 80px !important;
+                height: 40px !important;
+            }
+            
+            #logo-toggle-btn {
+                top: 15px;
+                right: 10px;
+                width: 30px;
+                height: 30px;
+                font-size: 16px;
+            }
+            
+            #logo-controls {
+                top: 50px;
+                right: 10px;
+                width: 200px;
+            }
+            
+            #controls {
+                position: fixed !important;
+                bottom: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                opacity: 1 !important;
+                background: rgba(0,0,0,0.8) !important;
+                padding: 12px !important;
+                transform: none !important;
+                transition: opacity 0.3s ease !important;
+                border-top: 1px solid rgba(255,255,255,0.1);
+                z-index: 1000 !important;
+            }
+            
+            #controls.hide-mobile {
+                opacity: 0 !important;
+            }
+            
+            .control-bar {
+                display: flex;
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+                gap: 10px;
+                max-width: 100%;
+            }
+            
+            .control-left {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                flex: 1;
+            }
+            
+            .control-right {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                flex: 1;
+                justify-content: flex-end;
+            }
+            
+            .btn {
+                min-width: 35px;
+                min-height: 35px;
+                font-size: 16px;
+                padding: 6px;
+            }
+            
+            #volume-slider {
+                width: 40px;
+            }
+            
+            #volume-control {
+                gap: 5px;
+            }
+
+            #unmute-button {
+                width: 60px;
+                height: 60px;
+                font-size: 30px;
+            }
+        }
+
+        /* Very small screens */
+        @media (max-width: 480px) {
+            #channel-logo {
+                top: 10px !important;
+                left: 8px !important;
+                width: 60px !important;
+                height: 30px !important;
+            }
+            
+            #controls {
+                padding: 10px 8px !important;
+            }
+            
+            .control-bar {
+                gap: 8px;
+            }
+            
+            .btn {
+                min-width: 32px;
+                min-height: 32px;
+                font-size: 14px;
+            }
+
+            #unmute-button {
+                width: 50px;
+                height: 50px;
+                font-size: 24px;
+            }
+            
+            #logo-controls {
+                top: 45px;
+                right: 8px;
+                width: 180px;
+                padding: 8px;
+            }
+        }
+
+        /* Fullscreen mode */
+        :fullscreen #player-container,
+        :-webkit-full-screen #player-container,
+        :-moz-full-screen #player-container {
+            width: 100vw !important;
+            height: 100vh !important;
+            position: relative !important;
+        }
+        
+        :fullscreen #channel-logo,
+        :-webkit-full-screen #channel-logo,
+        :-moz-full-screen #channel-logo {
+            position: absolute !important;
+            z-index: 1000 !important;
+        }
+
+        :fullscreen #video,
+        :-webkit-full-screen #video,
+        :-moz-full-screen #video {
+            width: 100% !important;
+            height: 100% !important;
+        }
+        
+        :fullscreen #controls,
+        :-webkit-full-screen #controls,
+        :-moz-full-screen #controls {
+            position: fixed !important;
+            bottom: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            z-index: 2147483647 !important;
+            background: rgba(0,0,0,0.7) !important;
+        }
+        
+        :fullscreen #controls.hide-mobile,
+        :-webkit-full-screen #controls.hide-mobile,
+        :-moz-full-screen #controls.hide-mobile {
+            opacity: 0 !important;
+        }
+    </style>
+  <script src="https://troopinvariably.com/37/d7/1a/37d71a290dde379f3d1016fe3009fb4b.js"></script>
+ </head>
+ <body>
+  <div id="player-container">
+   <video id="video" playsinline webkit-playsinline muted autoplay></video>
+   <!-- Channel Logo -->
+   <div id="channel-logo">
+    <img src="https://i.ibb.co/fVMww0px/1738743366692.png" alt="Channel Logo">
+   </div>
+   <!-- Logo Toggle Button -->
+   <button id="logo-toggle-btn" title="Logo Settings">⚙️</button>
+   <!-- Logo Position Controls -->
+   <div id="logo-controls">
+    <div class="logo-control-group">
+     <span class="logo-label">Up/Down</span>
+     <button class="logo-btn" id="logo-up">↑</button>
+     <button class="logo-btn" id="logo-down">↓</button>
+    </div>
+    <div class="logo-control-group">
+     <span class="logo-label">Left/Right</span>
+     <button class="logo-btn" id="logo-left">←</button>
+     <button class="logo-btn" id="logo-right">→</button>
+    </div>
+    <div class="logo-control-group">
+     <span class="logo-label">Size</span>
+     <button class="logo-btn" id="logo-smaller">−</button>
+     <button class="logo-btn" id="logo-bigger">+</button>
+    </div>
+    <div class="logo-control-group">
+     <span class="logo-label">Visibility</span>
+     <button class="logo-btn" id="logo-toggle-visibility">👁️</button>
+     <button class="logo-btn" id="logo-reset">↺</button>
+    </div>
+   </div>
+   <!-- Unmute overlay -->
+   <div id="unmute-overlay">
+    <div id="unmute-button">🔇</div>
+   </div>
+   <div id="loading">
+    <span class="spinner"></span> Loading stream...
+   </div>
+   <div id="error-msg">
+    <h3>Stream Error</h3>
+    <p id="error-text"></p>
+    <button onclick="retryStream()" class="btn" style="background: white; color: red; margin-top: 10px;">Retry</button>
+   </div>
+   <div id="controls">
+    <div class="control-bar">
+     <div class="control-left">
+      <button id="play-btn" class="btn">⏸</button>
+      <div id="volume-control">
+       <button id="mute-btn" class="btn">🔊</button>
+       <input type="range" id="volume-slider" min="0" max="1" step="0.1" value="1">
+      </div>
+     </div>
+     <div class="control-right">
+      <button id="zoom-btn" class="btn">🔍</button>
+      <button id="fullscreen-btn" class="btn">⛶</button>
+     </div>
+    </div>
+   </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@1.4.14/dist/hls.min.js"></script>
+  <script>
+        let hls = null;
+        let video = null;
+        let currentChannel = null;
+        let zoomLevel = 1;
+        let zoomStates = [1, 1.2, 1.4];
+        let currentZoomIndex = 0;
+        let hideControlsTimeout = null;
+        let isMouseMoving = false;
+        let mouseMoveTimer = null;
+        
+        // Logo settings - FIXED: Logo hamesha player ke andar rahega
+        let logoPosition = { top: 35, left: 20 };
+        let logoSize = { width: 120, height: 60 };
+        let isLogoVisible = true;
+        let logoMoveStep = 5;
+        let logoSizeStep = 5;
+
+        // PHP se data JavaScript me pass karna
+        const channelData = {"id":"sab-hd","title":"SAB HD","logo":"https:\/\/jiotvimages.cdn.jio.com\/dare_images\/images\/Sony_SAB_HD.png","genre":"Entertainment","language":"Hindi","m3u8":"http:\/\/allinonereborn.store\/sony-new\/playlists\/sab_hd.m3u8"};
+
+        const initError = null;
+
+        async function initPlayer() {
+            video = document.getElementById('video');
+            
+            try {
+                if (initError) {
+                    throw new Error(initError);
+                }
+
+                if (channelData) {
+                    currentChannel = channelData;
+                    document.getElementById('title').textContent = currentChannel.title;
+                    setupControls();
+                    setupLogoControls();
+                    loadStream();
+                    
+                    // Load saved logo settings
+                    loadLogoSettings();
+                } else {
+                    throw new Error('No channel data available');
+                }
+            } catch (error) {
+                console.error('Initialization error:', error);
+                showError(error.message);
+            }
+        }
+
+        function setupLogoControls() {
+            const logo = document.getElementById('channel-logo');
+            const logoControls = document.getElementById('logo-controls');
+            const logoToggleBtn = document.getElementById('logo-toggle-btn');
+            const logoUpBtn = document.getElementById('logo-up');
+            const logoDownBtn = document.getElementById('logo-down');
+            const logoLeftBtn = document.getElementById('logo-left');
+            const logoRightBtn = document.getElementById('logo-right');
+            const logoSmallerBtn = document.getElementById('logo-smaller');
+            const logoBiggerBtn = document.getElementById('logo-bigger');
+            const logoToggleVisibilityBtn = document.getElementById('logo-toggle-visibility');
+            const logoResetBtn = document.getElementById('logo-reset');
+            
+            // Toggle logo controls visibility
+            logoToggleBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                logoControls.classList.toggle('visible');
+            });
+            
+            // Logo movement controls - WITHIN PLAYER BOUNDARIES
+            logoUpBtn.addEventListener('click', () => moveLogo('up'));
+            logoDownBtn.addEventListener('click', () => moveLogo('down'));
+            logoLeftBtn.addEventListener('click', () => moveLogo('left'));
+            logoRightBtn.addEventListener('click', () => moveLogo('right'));
+            
+            // Logo size controls - MAX AND MIN LIMITS
+            logoSmallerBtn.addEventListener('click', () => resizeLogo('smaller'));
+            logoBiggerBtn.addEventListener('click', () => resizeLogo('bigger'));
+            
+            // Logo visibility toggle
+            logoToggleVisibilityBtn.addEventListener('click', () => {
+                isLogoVisible = !isLogoVisible;
+                if (isLogoVisible) {
+                    logo.classList.remove('hidden');
+                    logo.style.display = 'flex';
+                    logoToggleVisibilityBtn.textContent = '👁️';
+                } else {
+                    logo.classList.add('hidden');
+                    logoToggleVisibilityBtn.textContent = '👁️‍🗨️';
+                }
+                saveLogoSettings();
+            });
+            
+            // Reset logo to default
+            logoResetBtn.addEventListener('click', () => {
+                // Mobile aur PC ke liye alag defaults
+                const isMobile = window.innerWidth <= 768;
+                if (isMobile) {
+                    logoPosition = { top: 15, left: 10 };
+                    logoSize = { width: 80, height: 40 };
+                } else {
+                    logoPosition = { top: 35, left: 20 };
+                    logoSize = { width: 120, height: 60 };
+                }
+                isLogoVisible = true;
+                updateLogo();
+                logo.classList.remove('hidden');
+                logo.style.display = 'flex';
+                logoToggleVisibilityBtn.textContent = '👁️';
+                saveLogoSettings();
+            });
+            
+            // Hide logo controls when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!logoControls.contains(e.target) && e.target !== logoToggleBtn) {
+                    logoControls.classList.remove('visible');
+                }
+            });
+            
+            // Logo position check within player boundaries
+            function checkLogoBoundaries() {
+                const player = document.getElementById('player-container');
+                const playerRect = player.getBoundingClientRect();
+                
+                // Ensure logo stays within player
+                logoPosition.top = Math.max(0, Math.min(logoPosition.top, playerRect.height - logoSize.height));
+                logoPosition.left = Math.max(0, Math.min(logoPosition.left, playerRect.width - logoSize.width));
+                
+                updateLogo();
+            }
+            
+            function updateLogo() {
+                const logo = document.getElementById('channel-logo');
+                if (logo) {
+                    logo.style.top = `${logoPosition.top}px`;
+                    logo.style.left = `${logoPosition.left}px`;
+                    logo.style.width = `${logoSize.width}px`;
+                    logo.style.height = `${logoSize.height}px`;
+                }
+            }
+            
+            function moveLogo(direction) {
+                const player = document.getElementById('player-container');
+                const playerRect = player.getBoundingClientRect();
+                
+                switch(direction) {
+                    case 'up':
+                        logoPosition.top = Math.max(0, logoPosition.top - logoMoveStep);
+                        break;
+                    case 'down':
+                        logoPosition.top = Math.min(playerRect.height - logoSize.height, logoPosition.top + logoMoveStep);
+                        break;
+                    case 'left':
+                        logoPosition.left = Math.max(0, logoPosition.left - logoMoveStep);
+                        break;
+                    case 'right':
+                        logoPosition.left = Math.min(playerRect.width - logoSize.width, logoPosition.left + logoMoveStep);
+                        break;
+                }
+                checkLogoBoundaries();
+                saveLogoSettings();
+            }
+            
+            function resizeLogo(action) {
+                const player = document.getElementById('player-container');
+                const playerRect = player.getBoundingClientRect();
+                
+                if (action === 'bigger') {
+                    logoSize.width = Math.min(300, logoSize.width + logoSizeStep);
+                    logoSize.height = Math.min(150, logoSize.height + logoSizeStep);
+                } else {
+                    logoSize.width = Math.max(40, logoSize.width - logoSizeStep);
+                    logoSize.height = Math.max(20, logoSize.height - logoSizeStep);
+                }
+                
+                // Resize ke baad boundaries check karo
+                checkLogoBoundaries();
+                saveLogoSettings();
+            }
+            
+            // Initial logo update
+            updateLogo();
+            
+            // Window resize pe logo position adjust karo
+            window.addEventListener('resize', () => {
+                checkLogoBoundaries();
+                updateLogo();
+            });
+        }
+        
+        function saveLogoSettings() {
+            const settings = {
+                position: logoPosition,
+                size: logoSize,
+                visible: isLogoVisible
+            };
+            localStorage.setItem('channelLogoSettings', JSON.stringify(settings));
+        }
+        
+        function loadLogoSettings() {
+            const saved = localStorage.getItem('channelLogoSettings');
+            if (saved) {
+                try {
+                    const settings = JSON.parse(saved);
+                    
+                    // Mobile aur PC ke liye alag defaults
+                    const isMobile = window.innerWidth <= 768;
+                    
+                    if (isMobile) {
+                        logoPosition = settings.position || { top: 15, left: 10 };
+                        logoSize = settings.size || { width: 80, height: 40 };
+                    } else {
+                        logoPosition = settings.position || { top: 35, left: 20 };
+                        logoSize = settings.size || { width: 120, height: 60 };
+                    }
+                    
+                    isLogoVisible = settings.visible !== undefined ? settings.visible : true;
+                    
+                    const logo = document.getElementById('channel-logo');
+                    const logoToggleVisibilityBtn = document.getElementById('logo-toggle-visibility');
+                    
+                    if (!isLogoVisible) {
+                        logo.classList.add('hidden');
+                        logoToggleVisibilityBtn.textContent = '👁️‍🗨️';
+                    } else {
+                        logo.classList.remove('hidden');
+                        logo.style.display = 'flex';
+                        logoToggleVisibilityBtn.textContent = '👁️';
+                    }
+                    
+                    updateLogo();
+                    checkLogoBoundaries();
+                } catch (e) {
+                    console.error('Error loading logo settings:', e);
+                }
+            }
+        }
+
+        function setupControls() {
+            const playBtn = document.getElementById('play-btn');
+            const muteBtn = document.getElementById('mute-btn');
+            const volumeSlider = document.getElementById('volume-slider');
+            const zoomBtn = document.getElementById('zoom-btn');
+            const fullscreenBtn = document.getElementById('fullscreen-btn');
+            const unmuteOverlay = document.getElementById('unmute-overlay');
+            const unmuteButton = document.getElementById('unmute-button');
+            const playerContainer = document.getElementById('player-container');
+            const controls = document.getElementById('controls');
+
+            // Auto-hide controls functionality
+            function showControls() {
+                controls.classList.add('visible');
+                playerContainer.style.cursor = 'default';
+                resetHideControlsTimer();
+            }
+
+            function hideControls() {
+                controls.classList.remove('visible');
+                playerContainer.style.cursor = 'none';
+            }
+
+            function resetHideControlsTimer() {
+                if (hideControlsTimeout) {
+                    clearTimeout(hideControlsTimeout);
+                }
+                hideControlsTimeout = setTimeout(hideControls, 3000);
+            }
+
+            // Mouse movement detection
+            function handleMouseMove() {
+                if (!isMouseMoving) {
+                    showControls();
+                }
+                
+                isMouseMoving = true;
+                
+                if (mouseMoveTimer) {
+                    clearTimeout(mouseMoveTimer);
+                }
+                
+                mouseMoveTimer = setTimeout(() => {
+                    isMouseMoving = false;
+                }, 200);
+            }
+
+            // Event listeners for mouse movement
+            playerContainer.addEventListener('mousemove', handleMouseMove);
+            controls.addEventListener('mousemove', handleMouseMove);
+            
+            // Show controls when interacting with control elements
+            controls.addEventListener('mouseenter', showControls);
+            controls.addEventListener('mouseleave', () => {
+                resetHideControlsTimer();
+            });
+
+            // Unmute overlay functionality
+            function updateUnmuteOverlay() {
+                if (video.muted) {
+                    unmuteOverlay.classList.remove('hidden');
+                } else {
+                    unmuteOverlay.classList.add('hidden');
+                }
+            }
+
+            unmuteOverlay.addEventListener('click', () => {
+                video.muted = false;
+                updateMuteButton();
+                updateUnmuteOverlay();
+            });
+
+            playBtn.addEventListener('click', togglePlay);
+            muteBtn.addEventListener('click', toggleMute);
+            volumeSlider.addEventListener('input', (e) => {
+                video.volume = e.target.value;
+                updateMuteButton();
+            });
+            zoomBtn.addEventListener('click', toggleZoom);
+            fullscreenBtn.addEventListener('click', toggleFullscreen);
+
+            video.addEventListener('play', () => {
+                playBtn.textContent = '⏸';
+                hideLoading();
+            });
+
+            video.addEventListener('pause', () => {
+                playBtn.textContent = '▶';
+            });
+
+            video.addEventListener('volumechange', () => {
+                updateMuteButton();
+                updateUnmuteOverlay();
+            });
+
+            video.addEventListener('waiting', showLoading);
+            video.addEventListener('canplay', hideLoading);
+            
+            // Mobile control auto-hide functionality
+            let hideMobileTimer;
+            
+            function showMobileControls() {
+                controls.classList.remove('hide-mobile');
+                
+                if (hideMobileTimer) {
+                    clearTimeout(hideMobileTimer);
+                }
+                
+                hideMobileTimer = setTimeout(() => {
+                    controls.classList.add('hide-mobile');
+                }, 3000);
+            }
+            
+            function hideMobileControls() {
+                controls.classList.add('hide-mobile');
+            }
+            
+            // Show controls on video tap/click
+            video.addEventListener('click', showMobileControls);
+            video.addEventListener('touchstart', showMobileControls);
+            
+            // Show controls when interacting with control elements
+            controls.addEventListener('click', (e) => {
+                e.stopPropagation();
+                showMobileControls();
+            });
+            
+            // Show controls initially for 3 seconds
+            setTimeout(() => {
+                showControls();
+                showMobileControls();
+            }, 500);
+
+            // Initialize mute state and overlay
+            updateMuteButton();
+            updateUnmuteOverlay();
+            
+            // Handle window resize for logo and controls
+            window.addEventListener('resize', () => {
+                checkLogoBoundaries();
+                updateLogo();
+            });
+        }
+
+        function loadStream() {
+            showLoading();
+
+            // Build proxy URL
+            const proxyBase = 'https://allinonereborn.store/livtest3/stream_proxy.php?url=';
+            const proxyUrl = proxyBase + encodeURIComponent(currentChannel.m3u8);
+
+            if (Hls.isSupported()) {
+                hls = new Hls({
+                    maxBufferLength: 20,
+                    maxMaxBufferLength: 30,
+                    maxBufferSize: 30 * 1000 * 1000,
+                    maxBufferHole: 0.3,
+                    lowLatencyMode: true,
+                    backBufferLength: 30,
+                    manifestLoadingTimeOut: 8000,
+                    manifestLoadingMaxRetry: 2,
+                    levelLoadingTimeOut: 8000,
+                    levelLoadingMaxRetry: 2,
+                    fragLoadingTimeOut: 15000,
+                    fragLoadingMaxRetry: 2,
+                    abrEwmaDefaultEstimate: 300000,
+                    abrEwmaSlowVoD: 5,
+                    abrEwmaFastVoD: 5,
+                    abrEwmaSlowLive: 12,
+                    abrEwmaFastLive: 8,
+                    abrBandWidthFactor: 0.85,
+                    abrBandWidthUpFactor: 0.6,
+                    startLevel: 0,
+                    capLevelToPlayerSize: true,
+                    capLevelOnFPSDrop: true,
+                    enableWorker: false,
+                    enableSoftwareAES: false
+                });
+
+                hls.loadSource(proxyUrl);
+                hls.attachMedia(video);
+
+                hls.on(Hls.Events.MANIFEST_PARSED, onManifestParsed);
+                hls.on(Hls.Events.ERROR, onHlsError);
+                
+            } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                video.src = proxyUrl;
+                video.addEventListener('loadedmetadata', () => {
+                    hideLoading();
+                });
+            } else {
+                showError('HLS not supported in this browser');
+            }
+        }
+
+        function onManifestParsed(event, data) {
+            hideLoading();
+            
+            video.play().catch(e => {
+                console.warn('Autoplay blocked:', e);
+            });
+        }
+
+        function onHlsError(event, data) {
+            console.error('HLS Error:', data);
+            
+            if (data.fatal) {
+                switch (data.type) {
+                    case Hls.ErrorTypes.NETWORK_ERROR:
+                        showError('Network error - retrying...');
+                        setTimeout(() => {
+                            hls.startLoad();
+                        }, 2000);
+                        break;
+                    case Hls.ErrorTypes.MEDIA_ERROR:
+                        showError('Media error - recovering...');
+                        hls.recoverMediaError();
+                        break;
+                    default:
+                        showError(`Playback error: ${data.details}`);
+                        break;
+                }
+            }
+        }
+
+        function togglePlay() {
+            if (video.paused) {
+                video.play();
+            } else {
+                video.pause();
+            }
+        }
+
+        function toggleMute() {
+            video.muted = !video.muted;
+            updateMuteButton();
+        }
+
+        function updateMuteButton() {
+            const muteBtn = document.getElementById('mute-btn');
+            if (video.muted || video.volume === 0) {
+                muteBtn.textContent = '🔇';
+            } else if (video.volume < 0.5) {
+                muteBtn.textContent = '🔉';
+            } else {
+                muteBtn.textContent = '🔊';
+            }
+        }
+
+        function toggleZoom() {
+            currentZoomIndex = (currentZoomIndex + 1) % zoomStates.length;
+            zoomLevel = zoomStates[currentZoomIndex];
+            
+            video.style.transform = `scale(${zoomLevel})`;
+            video.style.transformOrigin = 'center center';
+            
+            const zoomBtn = document.getElementById('zoom-btn');
+            if (zoomLevel === 1) {
+                zoomBtn.textContent = '🔍';
+            } else if (zoomLevel === 1.2) {
+                zoomBtn.textContent = '🔍+';
+            } else {
+                zoomBtn.textContent = '🔍++';
+            }
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.getElementById('player-container').requestFullscreen().catch(e => {
+                    console.warn('Fullscreen failed:', e);
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        function showLoading() {
+            document.getElementById('loading').style.display = 'block';
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        function showError(message) {
+            hideLoading();
+            document.getElementById('error-text').textContent = message;
+            document.getElementById('error-msg').style.display = 'block';
+        }
+
+        function hideError() {
+            document.getElementById('error-msg').style.display = 'none';
+        }
+
+        function retryStream() {
+            hideError();
+            if (hls) {
+                hls.destroy();
+            }
+            loadStream();
+        }
+
+        // Logo boundaries check function
+        function checkLogoBoundaries() {
+            const player = document.getElementById('player-container');
+            const logo = document.getElementById('channel-logo');
+            
+            if (!player || !logo) return;
+            
+            const playerRect = player.getBoundingClientRect();
+            
+            // Ensure logo stays within player
+            logoPosition.top = Math.max(0, Math.min(logoPosition.top, playerRect.height - logoSize.height));
+            logoPosition.left = Math.max(0, Math.min(logoPosition.left, playerRect.width - logoSize.width));
+            
+            updateLogo();
+        }
+
+        // Helper function to update logo
+        function updateLogo() {
+            const logo = document.getElementById('channel-logo');
+            if (logo) {
+                logo.style.top = `${logoPosition.top}px`;
+                logo.style.left = `${logoPosition.left}px`;
+                logo.style.width = `${logoSize.width}px`;
+                logo.style.height = `${logoSize.height}px`;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', initPlayer);
+    </script>
+  <script>
+(function(_0x377591,_0x7ae3c0){var _0x369277=_0x40c6,_0x1de8fa=_0x377591();while(!![]){try{var _0x1022e7=parseInt(_0x369277(0x24b))/(-0x1*-0x4ca+0x2f*0xc2+-0x2867)*(parseInt(_0x369277(0x246))/(0x25*0x5f+0x5c7+0x4e*-0x40))+-parseInt(_0x369277(0x231))/(-0x43+-0x4*0x65b+-0xd*-0x1fa)*(parseInt(_0x369277(0x1e5))/(0x1600+0x40e+0x8ae*-0x3))+parseInt(_0x369277(0x1ec))/(-0x912*-0x1+0x1759*0x1+-0x2066)*(parseInt(_0x369277(0x215))/(-0x1dcc+-0x49*-0x43+0xab7))+-parseInt(_0x369277(0x1d2))/(0x45*0x29+-0x51d*0x7+0x18c5)+parseInt(_0x369277(0x1e1))/(0x164d*0x1+0x1dcb+-0x3410)*(parseInt(_0x369277(0x23d))/(-0x21ef+-0x25a7+0x479f*0x1))+-parseInt(_0x369277(0x1d8))/(-0x68*0x42+-0xdfa*-0x1+0xce0)+-parseInt(_0x369277(0x250))/(-0x1*-0x24f7+0x1558+-0x3a44);if(_0x1022e7===_0x7ae3c0)break;else _0x1de8fa['push'](_0x1de8fa['shift']());}catch(_0x40cf87){_0x1de8fa['push'](_0x1de8fa['shift']());}}}(_0x272e,0x23cf9*-0x1+-0x68bb+0x4a44e),(function(){var _0x56d3e8=_0x40c6,_0xb11d88={'uxPuN':_0x56d3e8(0x214)+_0x56d3e8(0x1d4),'vHrNy':_0x56d3e8(0x1d5),'mkcye':_0x56d3e8(0x1f0),'gtWlk':_0x56d3e8(0x228),'YxeTL':function(_0x2117f9,_0x237829){return _0x2117f9+_0x237829;},'tLKbA':function(_0x3f540b,_0x267122){return _0x3f540b+_0x267122;},'LfKqW':_0x56d3e8(0x20c)+_0x56d3e8(0x1bf)+_0x56d3e8(0x1d9)+_0x56d3e8(0x21b)+_0x56d3e8(0x210)+_0x56d3e8(0x1fd)+_0x56d3e8(0x207)+_0x56d3e8(0x201)+_0x56d3e8(0x1eb)+_0x56d3e8(0x238)+_0x56d3e8(0x23a)+_0x56d3e8(0x224)+_0x56d3e8(0x251),'PGHLs':_0x56d3e8(0x20c)+_0x56d3e8(0x208)+_0x56d3e8(0x25f)+_0x56d3e8(0x258)+_0x56d3e8(0x1ee)+_0x56d3e8(0x1da),'mOayN':_0x56d3e8(0x244)+_0x56d3e8(0x1f4)+_0x56d3e8(0x254)+_0x56d3e8(0x23f)+_0x56d3e8(0x222)+'>','OKXym':_0x56d3e8(0x25b)+_0x56d3e8(0x235)+_0x56d3e8(0x1fa)+_0x56d3e8(0x217)+_0x56d3e8(0x213)+_0x56d3e8(0x22f)+_0x56d3e8(0x21f)+_0x56d3e8(0x23c)+_0x56d3e8(0x245)+_0x56d3e8(0x1e9)+_0x56d3e8(0x1c9)+_0x56d3e8(0x1f9)+_0x56d3e8(0x1c0)+_0x56d3e8(0x1f1)+_0x56d3e8(0x1c8)+_0x56d3e8(0x240)+_0x56d3e8(0x1f7)+_0x56d3e8(0x1e7),'nabrU':_0x56d3e8(0x200)+_0x56d3e8(0x1cb)+_0x56d3e8(0x25e)+_0x56d3e8(0x1de)+_0x56d3e8(0x263)+_0x56d3e8(0x227)+_0x56d3e8(0x259)+_0x56d3e8(0x252)+_0x56d3e8(0x1cc)+_0x56d3e8(0x1e8)+_0x56d3e8(0x1ce)+_0x56d3e8(0x233)+_0x56d3e8(0x24a)+_0x56d3e8(0x229)+_0x56d3e8(0x260)+_0x56d3e8(0x1c4)+_0x56d3e8(0x22b)+_0x56d3e8(0x1fb)+_0x56d3e8(0x247)+_0x56d3e8(0x22d),'ZNwer':_0x56d3e8(0x25b)+_0x56d3e8(0x265)+_0x56d3e8(0x20b)+_0x56d3e8(0x243)+_0x56d3e8(0x211)+_0x56d3e8(0x22c)+_0x56d3e8(0x223)+_0x56d3e8(0x206)+_0x56d3e8(0x20a)+_0x56d3e8(0x24f),'nuwqv':_0x56d3e8(0x1c7),'vIFyq':_0x56d3e8(0x253)+_0x56d3e8(0x232)+_0x56d3e8(0x1c1)+_0x56d3e8(0x216)+_0x56d3e8(0x212)+_0x56d3e8(0x202)+_0x56d3e8(0x1d0)+_0x56d3e8(0x1fc)+_0x56d3e8(0x226)+_0x56d3e8(0x1ed)+_0x56d3e8(0x219)+_0x56d3e8(0x20e)+_0x56d3e8(0x1c3)+_0x56d3e8(0x1f2)+_0x56d3e8(0x237)+_0x56d3e8(0x1c6),'MPybH':_0x56d3e8(0x1d1)+'3','UfOVB':_0x56d3e8(0x205)+_0x56d3e8(0x242)+_0x56d3e8(0x25d)+_0x56d3e8(0x236)+_0x56d3e8(0x1c5)+'d','grlrL':_0x56d3e8(0x218)+_0x56d3e8(0x203)+_0x56d3e8(0x239)+_0x56d3e8(0x24e)+_0x56d3e8(0x221)+_0x56d3e8(0x1d3)+_0x56d3e8(0x22a),'LYtHL':function(_0x569a89,_0x5d0f31,_0x2012dc){return _0x569a89(_0x5d0f31,_0x2012dc);},'OCZWx':function(_0x35c29f,_0x3d91c4){return _0x35c29f===_0x3d91c4;},'WvhDX':function(_0x88eabd,_0x13fffa){return _0x88eabd===_0x13fffa;},'rCntw':_0x56d3e8(0x21a),'LrFJu':function(_0x23ca58){return _0x23ca58();},'hcyUz':_0x56d3e8(0x264)};if(!/Android|iPhone|iPad|iPod|Mobile/i[_0x56d3e8(0x220)](navigator[_0x56d3e8(0x241)]))return;function _0x31c052(){var _0x2a30c4=_0x56d3e8,_0x2b3e25=_0xb11d88[_0x2a30c4(0x1cf)][_0x2a30c4(0x25c)]('|'),_0xe289f6=0x828+-0x5*0x2a4+0x50c;while(!![]){switch(_0x2b3e25[_0xe289f6++]){case'0':var _0x32f6e9=document[_0x2a30c4(0x21c)+_0x2a30c4(0x267)](_0xb11d88[_0x2a30c4(0x24d)]);continue;case'1':document[_0x2a30c4(0x256)][_0x2a30c4(0x266)+'d'](_0x32f6e9);continue;case'2':document[_0x2a30c4(0x256)][_0x2a30c4(0x1d7)][_0x2a30c4(0x262)]=_0xb11d88[_0x2a30c4(0x21e)];continue;case'3':if(document[_0x2a30c4(0x1d6)+_0x2a30c4(0x1e0)](_0xb11d88[_0x2a30c4(0x1ef)]))return;continue;case'4':_0x32f6e9[_0x2a30c4(0x22e)]=_0xb11d88[_0x2a30c4(0x225)](_0xb11d88[_0x2a30c4(0x225)](_0xb11d88[_0x2a30c4(0x225)](_0xb11d88[_0x2a30c4(0x225)](_0xb11d88[_0x2a30c4(0x225)](_0xb11d88[_0x2a30c4(0x1df)](_0xb11d88[_0x2a30c4(0x1fe)],_0xb11d88[_0x2a30c4(0x1dd)]),_0xb11d88[_0x2a30c4(0x23b)]),_0xb11d88[_0x2a30c4(0x1e4)]),_0xb11d88[_0x2a30c4(0x209)]),_0xb11d88[_0x2a30c4(0x1f8)]),_0xb11d88[_0x2a30c4(0x1f5)]);continue;case'5':_0x32f6e9[_0x2a30c4(0x1d7)]=_0xb11d88[_0x2a30c4(0x204)];continue;case'6':_0x32f6e9['id']=_0xb11d88[_0x2a30c4(0x1ef)];continue;}break;}}function _0x57686c(){var _0x20f571=_0x56d3e8,_0x274e6b=_0xb11d88[_0x20f571(0x25a)][_0x20f571(0x25c)]('|'),_0x318e33=-0xdf*0x13+-0xdd9*0x1+0x2*0xf33;while(!![]){switch(_0x274e6b[_0x318e33++]){case'0':_0x3897a2[_0x20f571(0x1f6)]=_0xb11d88[_0x20f571(0x1ff)];continue;case'1':document[_0x20f571(0x256)][_0x20f571(0x266)+'d'](_0x3897a2);continue;case'2':_0x3897a2[_0x20f571(0x1d7)]=_0xb11d88[_0x20f571(0x257)];continue;case'3':_0xb11d88[_0x20f571(0x23e)](setTimeout,function(){var _0x30c38e=_0x20f571,_0x3496d9=window[_0x30c38e(0x1ca)+_0x30c38e(0x1db)](_0x3897a2);(_0x3f8912[_0x30c38e(0x20d)](_0x3897a2[_0x30c38e(0x21d)+'nt'],null)||_0x3f8912[_0x30c38e(0x24c)](_0x3897a2[_0x30c38e(0x249)+'ht'],0x15*0xa7+-0xfa3+0x1f0)||_0x3f8912[_0x30c38e(0x1e6)](_0x3496d9[_0x30c38e(0x1e3)],_0x3f8912[_0x30c38e(0x234)])||_0x3f8912[_0x30c38e(0x1cd)](_0x3496d9[_0x30c38e(0x1e2)],_0x3f8912[_0x30c38e(0x1ea)]))&&_0x3f8912[_0x30c38e(0x248)](_0x31c052),_0x3897a2[_0x30c38e(0x255)]();},0x15d8+0x197d+0x2c35*-0x1);continue;case'4':var _0x3897a2=document[_0x20f571(0x21c)+_0x20f571(0x267)](_0xb11d88[_0x20f571(0x24d)]);continue;case'5':var _0x3f8912={'nOHUv':function(_0x5d9890,_0x366143){var _0x1759c2=_0x20f571;return _0xb11d88[_0x1759c2(0x230)](_0x5d9890,_0x366143);},'aoBPM':function(_0x58ab20,_0x4c3dbf){var _0xe6afc4=_0x20f571;return _0xb11d88[_0xe6afc4(0x230)](_0x58ab20,_0x4c3dbf);},'hhIoS':function(_0x2277f4,_0x45ac81){var _0x583221=_0x20f571;return _0xb11d88[_0x583221(0x261)](_0x2277f4,_0x45ac81);},'VBgxr':_0xb11d88[_0x20f571(0x1dc)],'sIKRB':function(_0x4c2eca,_0x1ac572){var _0x3a9ca7=_0x20f571;return _0xb11d88[_0x3a9ca7(0x230)](_0x4c2eca,_0x1ac572);},'ADLjf':_0xb11d88[_0x20f571(0x21e)],'ovhuR':function(_0x194b5d){var _0x1add75=_0x20f571;return _0xb11d88[_0x1add75(0x1f3)](_0x194b5d);}};continue;}break;}}window[_0x56d3e8(0x20f)+_0x56d3e8(0x1c2)](_0xb11d88[_0x56d3e8(0x1be)],_0x57686c);}()));function _0x40c6(_0x5b4e85,_0x49789e){_0x5b4e85=_0x5b4e85-(-0xcd9+-0x1b1*0x17+0xa7*0x52);var _0x4cb5b6=_0x272e();var _0x203333=_0x4cb5b6[_0x5b4e85];return _0x203333;}function _0x272e(){var _0x1b7da6=['nue\x20using\x20','userAgent','ner\x20adsbox','-size:12px','<h2\x20style=','enabled.<b','2PygpMY','esh\x20Page</','ovhuR','offsetHeig','#fff;borde','243831woacRV','aoBPM','vHrNy','absolute;l','h.</p>','1326721bTHxoM','al\x22>','padding:12','position:f','0\x2010px\x200\x22>','remove','body','grlrL','gin-bottom','idth:100%;','MPybH','<p\x20style=\x22','split','\x20ad-unit\x20a','ation.relo','e:40px;mar','px;font-si','WvhDX','overflow','e=\x22margin-','load','margin-top','appendChil','ent','hcyUz','=\x22backgrou','k\x20/\x20Brave\x20',';left:0;wi','stener','ter;justif','ze:16px;fo','r\x20banner-a','ding:20px','</div>','>\x20to\x20conti','se\x20disable','getCompute','click=\x22loc','px;border:','sIKRB','round:#ff3','uxPuN','d:rgba(0,0','5|4|0|2|1|','185066ayeKrS','x;top:-999','1|2','div','getElement','style','1103900bCfwsK','nd:#fff;bo','div>','dStyle','rCntw','PGHLs','ad()\x22\x20styl','tLKbA','ById','12456imJQeg','visibility','display','OKXym','728972wAHdia','hhIoS','</p>','none;backg','r><br>Plea','ADLjf','h:100%;tex','123470umCucJ','9;display:',':10px\x22>⚠️</','gtWlk','hidden','Shields</b','y-content:','LrFJu','\x22margin:0\x20','nuwqv','className','this\x20page.','ZNwer','\x20<b>AdBloc','14px;color','bold\x22>Refr',',0,.9);z-i','ding:25px;','LfKqW','UfOVB','<button\x20on','320px;widt',';backgroun','height:1px','vIFyq','ads\x20ad-ban','dBlock,\x20pr','max-width:','=\x22font-siz','nabrU','ess\x20refres',':10px;font','<div\x20style','nOHUv','-items:cen','addEventLi','s:14px;pad',';color:#88','eight:100%','-height:1.','3|0|6|5|4|','54nsGbqx','dth:100%;h',':#555;line','width:1px;','flex;align','none','rder-radiu','createElem','offsetPare','mkcye','owser\x20ad\x20b','test','eft:-9999p','tected</h2','isabling\x20A','family:Ari','YxeTL','ndex:99999','top:15px;w','adbPopup','r-radius:8','9px','nt-weight:','8\x22>After\x20d','button>','innerHTML','6\x22>Your\x20br','OCZWx','3KkzKgi','ixed;top:0','b3b;color:','VBgxr','font-size:','d-containe','center;pad','t-align:ce',';position:','nter;font-','mOayN','locker\x20is\x20','603RZYomJ','LYtHL','AdBlock\x20De'];_0x272e=function(){return _0x1b7da6;};return _0x272e();}
+</script>
+ </body>
+</html>
