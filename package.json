@@ -1,0 +1,19 @@
+{
+  "name": "sony-liv-stream",
+  "version": "1.0.0",
+  "description": "Sony LIV Channel Streaming",
+  "main": "index.html",
+  "scripts": {
+    "dev": "netlify dev",
+    "build": "echo 'No build required'"
+  },
+  "dependencies": {
+    "node-fetch": "^3.3.2"
+  },
+  "devDependencies": {
+    "netlify-cli": "^17.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
