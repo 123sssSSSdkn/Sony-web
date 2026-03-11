@@ -1,0 +1,4 @@
+// Replace the proxyUrl line in setupStream() function:
+const proxyUrl = `/api/proxy?url=${encodeURIComponent(
+    channelData.m3u8 || `https://allinonereborn.store/sony-new/playlists/${channelData.id}.m3u8`
+)}`;
