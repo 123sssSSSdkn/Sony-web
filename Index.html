@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+   <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -27,18 +27,12 @@
         .header {
             text-align: center;
             padding: 40px 20px;
-            animation: fadeInDown 0.8s ease;
+            animation: fadeIn 1s ease;
         }
 
-        @keyframes fadeInDown {
-            from {
-                opacity: 0;
-                transform: translateY(-30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         h1 {
@@ -63,13 +57,15 @@
             margin-bottom: 20px;
         }
 
-        .channel-count {
+        .sony-badge {
             background: rgba(255, 215, 0, 0.2);
+            color: #ffd700;
             padding: 8px 20px;
             border-radius: 50px;
             display: inline-block;
             margin-bottom: 20px;
             border: 1px solid #ffd700;
+            font-weight: bold;
         }
 
         .search-box {
@@ -159,7 +155,7 @@
             text-transform: uppercase;
         }
 
-        .channel-genre {
+        .channel-category {
             font-size: 11px;
             color: rgba(255, 255, 255, 0.7);
             margin-top: 5px;
@@ -182,24 +178,21 @@
             border-radius: 15px;
         }
 
-        .loading {
+        .channel-count {
             text-align: center;
-            padding: 50px;
-            display: none;
+            margin: 10px 0;
+            font-size: 0.9em;
+            opacity: 0.8;
         }
 
-        .spinner {
-            width: 50px;
-            height: 50px;
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top-color: #ffd700;
-            animation: spin 1s ease-in-out infinite;
-            margin: 0 auto 20px;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+        .proxy-badge {
+            background: rgba(0, 255, 0, 0.2);
+            color: #00ff00;
+            font-size: 8px;
+            padding: 2px 5px;
+            border-radius: 3px;
+            margin-left: 5px;
+            border: 1px solid #00ff00;
         }
 
         @media (max-width: 768px) {
@@ -220,82 +213,241 @@
     <div class="container">
         <header class="header">
             <h1>📺 @allinone_reborn</h1>
-            <div class="subtitle">All Sony LIV Channels • Live Streaming</div>
-            <div class="channel-count" id="channelCount">Loading channels...</div>
+            <div class="subtitle">All Sony LIV Channels • Direct Added</div>
+            <div class="sony-badge">🎬 SONY CHANNELS - COMPLETE COLLECTION</div>
             <div class="search-box">
-                <input type="text" id="searchInput" placeholder="🔍 Search channels by name, genre, or language..." onkeyup="filterChannels()">
+                <input type="text" id="searchInput" placeholder="🔍 Search all Sony channels..." onkeyup="filterChannels()">
             </div>
         </header>
 
-        <div class="loading" id="loading">
-            <div class="spinner"></div>
-            <p>Loading channels...</p>
-        </div>
-
-        <div class="channel-grid" id="channelGrid"></div>
+        <div id="channelGrid" class="channel-grid"></div>
+        <div class="channel-count" id="channelCount"></div>
 
         <footer class="footer">
-            <p>© 2024 @allinone_reborn - All rights reserved</p>
-            <p>📺 Total Channels: <span id="totalChannels">0</span></p>
+            <p>© 2024 @allinone_reborn • Complete Sony Channel Collection</p>
+            <p>Total Channels: <span id="totalChannels">0</span></p>
         </footer>
     </div>
 
     <script>
-        // Complete channel list with all Sony channels
-        const channels = [
-            // Entertainment Channels
-            { id: 'sony-hd', title: 'SONY HD', logo: 'https://jiotvimages.cdn.jio.com/dare_images/images/Sony_HD.png', genre: 'Entertainment', language: 'Hindi', url: 'https://allinonereborn.store/sony-new/playlists/sony_hd.m3u8' },
-            { id: 'sab-hd', title: 'SAB HD', logo: 'https://jiotvimages.cdn.jio.com/dare_images/images/Sony_SAB_HD.png', genre: 'Comedy', language: 'Hindi', url: 'https://allinonereborn.store/sony-new/playlists/sab_hd.m3u8' },
+        // DIRECT CHANNELS - No JSON, no fetch, direct added from your list
+        const allChannels = [
+            // DASH Channels with DRM (IDs 1144-1146)
+            {
+                id: 1144,
+                title: "Sony MAX1",
+                logo: "https://jiotvimages.cdn.jio.com/dare_images/images/SonyMAX1.png",
+                category: "English",
+                url: "https://jiotvmblive.cdn.jio.com/bpk-tv/SonyMAX1_MOB/WDVLive/index.mpd?__hdnea__=st=1773193670~exp=1773280070~acl=/*~hmac=4ebe72b1c4589b2272e5bbed1f9cda498e125b64f6fbc785619f49e820e2711e",
+                referer: "https://www.jiotv.com/",
+                drm: {"7d1893ecbbef5872a37dfadbbc304bb9": "dcbcecbf01a838c3336d732a40296efb"}
+            },
+            {
+                id: 1145,
+                title: "Sony Pix HD",
+                logo: "https://jiotvimages.cdn.jio.com/dare_images/images/Sony_Pix_HD.png",
+                category: "English",
+                url: "https://jiotvmblive.cdn.jio.com/bpk-tv/SonyPIX_MOB/WDVLive/index.mpd?__hdnea__=st=1773193670~exp=1773280070~acl=/*~hmac=4ebe72b1c4589b2272e5bbed1f9cda498e125b64f6fbc785619f49e820e2711e",
+                referer: "https://www.jiotv.com/",
+                drm: {"1ff1fe6b2519562ca3a28602592cd547": "d43132eca3cefc4e29ca8fe548a0638b"}
+            },
+            {
+                id: 1146,
+                title: "Sony BBC Earth HD",
+                logo: "https://jiotvimages.cdn.jio.com/dare_images/images/Sony_BBC_Earth_HD.png",
+                category: "English",
+                url: "https://jiotvmblive.cdn.jio.com/bpk-tv/SonyBBCEarthHin_BTS/output/index.mpd?__hdnea__=st=1773193670~exp=1773280070~acl=/*~hmac=4ebe72b1c4589b2272e5bbed1f9cda498e125b64f6fbc785619f49e820e2711e",
+                referer: "https://www.jiotv.com/",
+                drm: {"f45e69507f0f5aa1a6e82374efb0af25": "f84348219837769feb5a26a7b1cd31dc"}
+            },
             
-            // Regional Channels
-            { id: 'sony-marathi', title: 'SONY MARATHI', logo: 'https://jiotvimages.cdn.jio.com/dare_images/images/Sony_Marathi_SD.png', genre: 'Regional', language: 'Marathi', url: 'https://allinonereborn.store/sony-new/playlists/sony_marathi.m3u8' },
-            { id: 'sony-pal', title: 'SONY PAL', logo: 'https://jiotvimages.cdn.jio.com/dare_images/images/Sony_Pal.png', genre: 'Regional', language: 'Punjabi', url: 'https://allinonereborn.store/sony-new/playlists/sony_pal.m3u8' },
-            { id: 'sony-aath', title: 'SONY AATH', logo: 'https://jiotvimages.cdn.jio.com/dare_images/images/Sony_aath.png', genre: 'Regional', language: 'Bengali', url: 'https://allinonereborn.store/sony-new/playlists/sony_aath.m3u8' },
-            
-            // Kids Channel
-            { id: 'sony-yay', title: 'SONY YAY', logo: 'https://jiotvimages.cdn.jio.com/dare_images/images/Sony_Yay_Hindi.png', genre: 'Kids', language: 'Hindi', url: 'https://allinonereborn.store/sony-new/playlists/sony_yay.m3u8' },
-            
-            // Movie Channels
-            { id: 'sony-max-hd', title: 'SONY MAX HD', logo: 'https://jiotvimages.cdn.jio.com/dare_images/images/Sony_Max_HD.png', genre: 'Movies', language: 'Hindi', url: 'https://allinonereborn.store/sony-new/playlists/sony_max_hd.m3u8' },
-            { id: 'sony-max', title: 'SONY MAX', logo: 'https://jiotvimages.cdn.jio.com/dare_images/images/Sony_Max_SD.png', genre: 'Movies', language: 'Hindi', url: 'https://allinonereborn.store/sony-new/playlists/sony_max.m3u8' },
-            { id: 'sony-max2', title: 'SONY MAX2', logo: 'https://jiotvimages.cdn.jio.com/dare_images/images/Sony_MAX2.png', genre: 'Movies', language: 'Hindi', url: 'https://allinonereborn.store/sony-new/playlists/sony_max2.m3u8' },
-            { id: 'sony-wah', title: 'SONY WAH', logo: 'https://jiotvimages.cdn.jio.com/dare_images/images/Sony_Wah.png', genre: 'Music', language: 'Hindi', url: 'https://allinonereborn.store/sony-new/playlists/sony_wah.m3u8' },
-            { id: 'sony-pix-hd', title: 'SONY PIX HD', logo: 'https://jiotvimages.cdn.jio.com/dare_images/images/Sony_Pix_HD.png', genre: 'Movies', language: 'English', url: 'https://allinonereborn.store/sony-new/playlists/sony_pix_hd.m3u8' },
-            
-            // Sports Channels - TEN Series
-            { id: 'sony-ten-1-hd', title: 'SONY TEN 1 HD', logo: 'https://jiotvimages.cdn.jio.com/dare_images/images/Ten_HD.png', genre: 'Sports', language: 'Multiple', url: 'https://allinonereborn.store/sony-new/playlists/sony_ten_1_hd.m3u8' },
-            { id: 'sony-ten-1', title: 'SONY TEN 1', logo: 'https://jiotvimages.cdn.jio.com/dare_images/images/Ten_1.png', genre: 'Sports', language: 'Multiple', url: 'https://allinonereborn.store/sony-new/playlists/sony_ten_1.m3u8' },
-            { id: 'sony-ten-2-hd', title: 'SONY TEN 2 HD', logo: 'https://jiotvimages.cdn.jio.com/dare_images/images/Ten2_HD.png', genre: 'Sports', language: 'Multiple', url: 'https://allinonereborn.store/sony-new/playlists/sony_ten_2_hd.m3u8' },
-            { id: 'sony-ten-2', title: 'SONY TEN 2', logo: 'https://jiotvimages.cdn.jio.com/dare_images/images/Ten2_HD.png', genre: 'Sports', language: 'Multiple', url: 'https://allinonereborn.store/sony-new/playlists/sony_ten_2.m3u8' },
-            { id: 'sony-ten-3-hd', title: 'SONY TEN 3 HD', logo: 'https://jiotvimages.cdn.jio.com/dare_images/images/Ten3_HD.png', genre: 'Sports', language: 'Multiple', url: 'https://allinonereborn.store/sony-new/playlists/sony_ten_3_hd.m3u8' },
-            { id: 'sony-ten-3', title: 'SONY TEN 3', logo: 'https://jiotvimages.cdn.jio.com/dare_images/images/Ten3_HD.png', genre: 'Sports', language: 'Multiple', url: 'https://allinonereborn.store/sony-new/playlists/sony_ten_3.m3u8' },
-            { id: 'sony-ten-4-hd', title: 'SONY TEN 4 HD', logo: 'https://jiotvimages.cdn.jio.com/dare_images/images/Ten_4_HD_Telugu.png', genre: 'Sports', language: 'Telugu', url: 'https://allinonereborn.store/sony-new/playlists/sony_ten_4_hd.m3u8' },
-            { id: 'sony-ten-4', title: 'SONY TEN 4', logo: 'https://jiotvimages.cdn.jio.com/dare_images/images/Ten_4_Telugu.png', genre: 'Sports', language: 'Telugu', url: 'https://allinonereborn.store/sony-new/playlists/sony_ten_4.m3u8' },
-            { id: 'sony-ten-5-hd', title: 'SONY TEN 5 HD', logo: 'https://jiotvimages.cdn.jio.com/dare_images/images/Six_HD.png', genre: 'Sports', language: 'Multiple', url: 'https://allinonereborn.store/sony-new/playlists/sony_ten_5_hd.m3u8' },
-            { id: 'sony-ten-5', title: 'SONY TEN 5', logo: 'https://jiotvimages.cdn.jio.com/dare_images/images/Six_HD.png', genre: 'Sports', language: 'Multiple', url: 'https://allinonereborn.store/sony-new/playlists/sony_ten_5.m3u8' },
-            
-            // Documentary Channel
-            { id: 'bbc-earth', title: 'BBC EARTH', logo: 'https://jiotvimages.cdn.jio.com/dare_images/images/Sony_BBC_Earth_HD.png', genre: 'Documentary', language: 'English', url: 'https://allinonereborn.store/sony-new/playlists/bbc_earth.m3u8' }
+            // Proxy URLs - Original Sony Channels (IDs 1147-1168)
+            {
+                id: 1147,
+                title: "SONY HD",
+                logo: "https://jiotvimages.cdn.jio.com/dare_images/images/Sony_HD.png",
+                category: "Sony Network",
+                url: "https://servertvhub.site/proxy.php?url=http%3A%2F%2Fallinonereborn.store%2Fsony-new%2Fplaylists%2Fsony_hd.m3u8",
+                isProxy: true
+            },
+            {
+                id: 1148,
+                title: "SAB HD",
+                logo: "https://jiotvimages.cdn.jio.com/dare_images/images/Sony_SAB_HD.png",
+                category: "Sony Network",
+                url: "https://servertvhub.site/proxy.php?url=http%3A%2F%2Fallinonereborn.store%2Fsony-new%2Fplaylists%2Fsab_hd.m3u8",
+                isProxy: true
+            },
+            {
+                id: 1149,
+                title: "SONY MARATHI",
+                logo: "https://jiotvimages.cdn.jio.com/dare_images/images/Sony_Marathi_SD.png",
+                category: "Sony Network",
+                url: "https://servertvhub.site/proxy.php?url=http%3A%2F%2Fallinonereborn.store%2Fsony-new%2Fplaylists%2Fsony_marathi.m3u8",
+                isProxy: true
+            },
+            {
+                id: 1150,
+                title: "SONY PAL",
+                logo: "https://jiotvimages.cdn.jio.com/dare_images/images/Sony_Pal.png",
+                category: "Sony Network",
+                url: "https://servertvhub.site/proxy.php?url=http%3A%2F%2Fallinonereborn.store%2Fsony-new%2Fplaylists%2Fsony_pal.m3u8",
+                isProxy: true
+            },
+            {
+                id: 1151,
+                title: "SONY AATH",
+                logo: "https://jiotvimages.cdn.jio.com/dare_images/images/Sony_aath.png",
+                category: "Sony Network",
+                url: "https://servertvhub.site/proxy.php?url=http%3A%2F%2Fallinonereborn.store%2Fsony-new%2Fplaylists%2Fsony_aath.m3u8",
+                isProxy: true
+            },
+            {
+                id: 1152,
+                title: "SONY YAY",
+                logo: "https://jiotvimages.cdn.jio.com/dare_images/images/Sony_Yay_Hindi.png",
+                category: "Sony Network",
+                url: "https://servertvhub.site/proxy.php?url=http%3A%2F%2Fallinonereborn.store%2Fsony-new%2Fplaylists%2Fsony_yay.m3u8",
+                isProxy: true
+            },
+            {
+                id: 1153,
+                title: "SONY MAX HD",
+                logo: "https://jiotvimages.cdn.jio.com/dare_images/images/Sony_Max_HD.png",
+                category: "Sony Network",
+                url: "https://servertvhub.site/proxy.php?url=http%3A%2F%2Fallinonereborn.store%2Fsony-new%2Fplaylists%2Fsony_max_hd.m3u8",
+                isProxy: true
+            },
+            {
+                id: 1154,
+                title: "SONY MAX",
+                logo: "https://jiotvimages.cdn.jio.com/dare_images/images/Sony_Max_SD.png",
+                category: "Sony Network",
+                url: "https://servertvhub.site/proxy.php?url=http%3A%2F%2Fallinonereborn.store%2Fsony-new%2Fplaylists%2Fsony_max.m3u8",
+                isProxy: true
+            },
+            {
+                id: 1155,
+                title: "SONY MAX2",
+                logo: "https://jiotvimages.cdn.jio.com/dare_images/images/Sony_MAX2.png",
+                category: "Sony Network",
+                url: "https://servertvhub.site/proxy.php?url=http%3A%2F%2Fallinonereborn.store%2Fsony-new%2Fplaylists%2Fsony_max2.m3u8",
+                isProxy: true
+            },
+            {
+                id: 1156,
+                title: "SONY WAH",
+                logo: "https://jiotvimages.cdn.jio.com/dare_images/images/Sony_Wah.png",
+                category: "Sony Network",
+                url: "https://servertvhub.site/proxy.php?url=http%3A%2F%2Fallinonereborn.store%2Fsony-new%2Fplaylists%2Fsony_wah.m3u8",
+                isProxy: true
+            },
+            {
+                id: 1157,
+                title: "SONY PIX HD",
+                logo: "https://jiotvimages.cdn.jio.com/dare_images/images/Sony_Pix_HD.png",
+                category: "Sony Network",
+                url: "https://servertvhub.site/proxy.php?url=http%3A%2F%2Fallinonereborn.store%2Fsony-new%2Fplaylists%2Fsony_pix_hd.m3u8",
+                isProxy: true
+            },
+            {
+                id: 1158,
+                title: "BBC EARTH",
+                logo: "https://jiotvimages.cdn.jio.com/dare_images/images/Sony_BBC_Earth_HD.png",
+                category: "Sony Network",
+                url: "https://servertvhub.site/proxy.php?url=http%3A%2F%2Fallinonereborn.store%2Fsony-new%2Fplaylists%2Fbbc_earth.m3u8",
+                isProxy: true
+            },
+            {
+                id: 1159,
+                title: "SONY TEN 1",
+                logo: "https://jiotvimages.cdn.jio.com/dare_images/images/Ten_1.png",
+                category: "Sony Network",
+                url: "https://servertvhub.site/proxy.php?url=http%3A%2F%2Fallinonereborn.store%2Fsony-new%2Fplaylists%2Fsony_ten1.m3u8",
+                isProxy: true
+            },
+            {
+                id: 1160,
+                title: "SONY TEN 2",
+                logo: "https://jiotvimages.cdn.jio.com/dare_images/images/Ten2_HD.png",
+                category: "Sony Network",
+                url: "https://servertvhub.site/proxy.php?url=http%3A%2F%2Fallinonereborn.store%2Fsony-new%2Fplaylists%2Fsony_ten2.m3u8",
+                isProxy: true
+            },
+            {
+                id: 1161,
+                title: "SONY TEN 3",
+                logo: "https://jiotvimages.cdn.jio.com/dare_images/images/Ten3_HD.png",
+                category: "Sony Network",
+                url: "https://servertvhub.site/proxy.php?url=http%3A%2F%2Fallinonereborn.store%2Fsony-new%2Fplaylists%2Fsony_ten3.m3u8",
+                isProxy: true
+            },
+            {
+                id: 1162,
+                title: "SONY TEN 4",
+                logo: "https://jiotvimages.cdn.jio.com/dare_images/images/Ten_4_Telugu.png",
+                category: "Sony Network",
+                url: "https://servertvhub.site/proxy.php?url=http%3A%2F%2Fallinonereborn.store%2Fsony-new%2Fplaylists%2Fsony_ten4.m3u8",
+                isProxy: true
+            },
+            {
+                id: 1163,
+                title: "SONY TEN 5",
+                logo: "https://jiotvimages.cdn.jio.com/dare_images/images/Six_HD.png",
+                category: "Sony Network",
+                url: "https://servertvhub.site/proxy.php?url=http%3A%2F%2Fallinonereborn.store%2Fsony-new%2Fplaylists%2Fsony_ten5.m3u8",
+                isProxy: true
+            },
+            {
+                id: 1164,
+                title: "SONY TEN 1 HD",
+                logo: "https://jiotvimages.cdn.jio.com/dare_images/images/Ten_HD.png",
+                category: "Sony Network",
+                url: "https://servertvhub.site/proxy.php?url=http%3A%2F%2Fallinonereborn.store%2Fsony-new%2Fplaylists%2Fsony_ten1_hd.m3u8",
+                isProxy: true
+            },
+            {
+                id: 1165,
+                title: "SONY TEN 2 HD",
+                logo: "https://jiotvimages.cdn.jio.com/dare_images/images/Ten2_HD.png",
+                category: "Sony Network",
+                url: "https://servertvhub.site/proxy.php?url=http%3A%2F%2Fallinonereborn.store%2Fsony-new%2Fplaylists%2Fsony_ten2_hd.m3u8",
+                isProxy: true
+            },
+            {
+                id: 1166,
+                title: "SONY TEN 3 HD",
+                logo: "https://jiotvimages.cdn.jio.com/dare_images/images/Ten3_HD.png",
+                category: "Sony Network",
+                url: "https://servertvhub.site/proxy.php?url=http%3A%2F%2Fallinonereborn.store%2Fsony-new%2Fplaylists%2Fsony_ten3_hd.m3u8",
+                isProxy: true
+            },
+            {
+                id: 1167,
+                title: "SONY TEN 4 HD",
+                logo: "https://jiotvimages.cdn.jio.com/dare_images/images/Ten_4_HD_Telugu.png",
+                category: "Sony Network",
+                url: "https://servertvhub.site/proxy.php?url=http%3A%2F%2Fallinonereborn.store%2Fsony-new%2Fplaylists%2Fsony_ten4_hd.m3u8",
+                isProxy: true
+            },
+            {
+                id: 1168,
+                title: "SONY TEN 5 HD",
+                logo: "https://jiotvimages.cdn.jio.com/dare_images/images/Six_HD.png",
+                category: "Sony Network",
+                url: "https://servertvhub.site/proxy.php?url=http%3A%2F%2Fallinonereborn.store%2Fsony-new%2Fplaylists%2Fsony_ten5_hd.m3u8",
+                isProxy: true
+            }
         ];
 
-        let currentChannels = [...channels];
-        const grid = document.getElementById('channelGrid');
-        const loading = document.getElementById('loading');
-        const channelCountSpan = document.getElementById('channelCount');
-        const totalChannelsSpan = document.getElementById('totalChannels');
+        let currentChannels = [...allChannels];
 
-        // Update channel count
-        function updateChannelCount() {
-            channelCountSpan.textContent = `📡 ${currentChannels.length} Channels Available`;
-            totalChannelsSpan.textContent = channels.length;
-        }
-
-        // Display channels with staggered animation
         function displayChannels(channelsToShow) {
+            const grid = document.getElementById('channelGrid');
             grid.innerHTML = '';
-            
+
             if (channelsToShow.length === 0) {
-                grid.innerHTML = '<div class="no-results">🔍 No channels found matching your search</div>';
+                grid.innerHTML = '<div class="no-results">🔍 No Sony channels found matching your search</div>';
                 return;
             }
 
@@ -303,66 +455,46 @@
                 const card = document.createElement('a');
                 card.className = 'channel-card';
                 card.href = `player.html?data=${encodeURIComponent(JSON.stringify(channel))}`;
-                card.style.animationDelay = `${index * 0.03}s`;
+                card.style.animationDelay = `${index * 0.02}s`;
+                
+                const proxyBadge = channel.isProxy ? '<span class="proxy-badge">PROXY</span>' : '';
                 
                 card.innerHTML = `
                     <div class="channel-logo">
-                        <img src="${channel.logo}" alt="${channel.title}" loading="lazy" onerror="this.src='https://via.placeholder.com/120x80?text=${channel.title.replace(' ', '+')}'">
+                        <img src="${channel.logo}" alt="${channel.title}" loading="lazy" onerror="this.src='https://via.placeholder.com/120x80?text=Sony'">
                     </div>
                     <div class="channel-title">
-                        ${channel.title}
-                        <div class="channel-genre">${channel.genre} • ${channel.language}</div>
+                        ${channel.title} ${proxyBadge}
+                        <div class="channel-category">${channel.category}</div>
                     </div>
                 `;
                 
                 grid.appendChild(card);
             });
 
-            updateChannelCount();
+            document.getElementById('totalChannels').textContent = allChannels.length;
+            document.getElementById('channelCount').textContent = `📡 ${channelsToShow.length} Sony Channels`;
         }
 
-        // Filter channels based on search
         function filterChannels() {
             const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
             
             if (searchTerm === '') {
-                currentChannels = [...channels];
+                currentChannels = [...allChannels];
             } else {
-                currentChannels = channels.filter(channel => 
+                currentChannels = allChannels.filter(channel => 
                     channel.title.toLowerCase().includes(searchTerm) ||
-                    channel.genre.toLowerCase().includes(searchTerm) ||
-                    channel.language.toLowerCase().includes(searchTerm)
+                    (channel.category && channel.category.toLowerCase().includes(searchTerm))
                 );
             }
             
             displayChannels(currentChannels);
         }
 
-        // Load channels with loading animation
-        function loadChannels() {
-            loading.style.display = 'block';
-            grid.style.opacity = '0';
-            
-            setTimeout(() => {
-                loading.style.display = 'none';
-                displayChannels(channels);
-                grid.style.opacity = '1';
-            }, 500);
-        }
-
-        // Initialize
+        // Direct display on page load
         document.addEventListener('DOMContentLoaded', () => {
-            loadChannels();
-            updateChannelCount();
-        });
-
-        // Add keyboard support for search
-        document.getElementById('searchInput').addEventListener('keyup', (e) => {
-            if (e.key === 'Escape') {
-                e.target.value = '';
-                filterChannels();
-            }
+            displayChannels(allChannels);
         });
     </script>
 </body>
-</html>
+</html>     
